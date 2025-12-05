@@ -5,7 +5,7 @@
 #### python Installation 
 The python onnxruntime code requires `python>=3.10`, as well as `torch>=2.3.1`.
 ```
-pip install onnxruntime-gpu==1.20.0   # 如需 GPU 运行 ONNX Runtime
+pip install onnxruntime-gpu==1.20.0
 ```
 
 #### Load ONNX
