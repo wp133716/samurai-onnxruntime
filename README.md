@@ -18,3 +18,5 @@ onnx模型可以在另一个项目 [samurai-onnx](https://github.com/wp133716/sa
 cd python
 python main.py --video_path <path_to_video> --model_path <path_to_onnx_models>
 ```
+
+#### onnxruntime C++推理版本coming soon
