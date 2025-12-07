@@ -2,7 +2,7 @@
 
 This repository contains the ONNX Runtime implementation of the [SAMURAI: Adapting Segment Anything Model for Zero-Shot Visual Tracking with Motion-Aware Memory](https://github.com/yangchris11/samurai). The codebase includes both Python and C++ implementations for running inference using ONNX models.
 
-[跟踪效果](assets/result.mp4)
+https://github.com/user-attachments/assets/7fdfbc6d-cf96-425a-842d-897dc0698bce
 
 ## Getting Started
 
