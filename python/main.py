@@ -49,7 +49,7 @@ class CameraPredictor:
         self.img_std = np.array([0.229, 0.224, 0.225]).reshape((3, 1, 1)).astype(np.float32)
 
         self.image_size = 512
-        self.video_W, self.video_H = 1280, 720
+        # self.video_W, self.video_H = 1280, 720
         
         self.maskmem_tpos_enc = None
 
@@ -108,7 +108,11 @@ class CameraPredictor:
         '''
         Add the first bbox when the frame_idx is 0.
         '''
-        input_image = image.astype(np.float32)
+        video_H, video_W = image.shape[:2]
+        input_image = cv2.resize(image, (self.image_size, self.image_size))
+        input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+
+        input_image = input_image.astype(np.float32)
         # image_encoder predict
         image_encoder_outputs = self.image_encoder_session.run(self.image_encoder_output_names, 
                                                           {self.image_encoder_input_names[0]: input_image[np.newaxis, ...]})
@@ -117,8 +121,7 @@ class CameraPredictor:
         box_coords = np.array(first_frame_bbox).reshape((1, 2, 2))
         box_labels = np.array([2, 3]).reshape((1, 2))
 
-        # video_H, video_W = frame.shape[:2]
-        points = box_coords / np.array([self.video_W, self.video_H])
+        points = box_coords / np.array([video_W, video_H])
 
         input_points = (points * self.image_size).astype(np.float32)
         input_labels = box_labels.astype(np.int32)
@@ -162,7 +165,9 @@ class CameraPredictor:
 
         # step 1:image_encoder predict, get image feature
         start = time.time()
-        input_image = image.astype(np.float32)
+        input_image = cv2.resize(image, (self.image_size, self.image_size))
+        input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+        input_image = input_image.astype(np.float32)
 
         image_encoder_outputs = self.image_encoder_session.run(self.image_encoder_output_names, 
                                                           {self.image_encoder_input_names[0]: input_image[np.newaxis, ...]})
@@ -381,6 +386,9 @@ def main(args):
 
     image_size = camera_predictor.image_size
     cap = cv2.VideoCapture(args.video_path)
+    if not cap.isOpened():
+        print("Error: Could not open video : ", args.video_path)
+        return
     num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -403,20 +411,16 @@ def main(args):
         if not ret:
             break
 
-        # input_image = vr[frame_idx].numpy()
-        input_image = cv2.resize(frame, (image_size, image_size))
-        input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-
         if frame_idx == 0:
-            bbox = cv2.selectROI(name_window, frame)
+            bbox = cv2.selectROI(name_window, frame.copy())
             print("bbox (x, y, w, h): ", bbox)
             x, y, w, h = bbox
             first_frame_bbox = (x, y, x + w, y + h)
             # first_frame_bbox = load_txt(args.txt_path)[0][0]
 
-            mask = camera_predictor.add_first_frame_bbox(frame_idx, input_image, first_frame_bbox)
+            mask = camera_predictor.add_first_frame_bbox(frame_idx, frame.copy(), first_frame_bbox)
         else:
-            mask = camera_predictor.track_step(frame_idx, input_image)
+            mask = camera_predictor.track_step(frame_idx, frame.copy())
 
         mask = cv2.resize(mask, (frame_width, frame_height))
         mask = mask > 0.0
@@ -431,7 +435,7 @@ def main(args):
         mask_img = np.zeros((frame_height, frame_width, 3), np.uint8)
         mask_img[mask] = color[1]
 
-        frame = cv2.addWeighted(frame, 1, mask_img, 0.4, 0)
+        frame = cv2.addWeighted(frame, 1, mask_img, 0.2, 0)
         cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), color[1], 2)
         cv2.imshow(name_window, frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -448,12 +452,12 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--video_path", required=True, help="Input video path or directory of frames.")
+    parser.add_argument("--video_path", default="../assets/1917.mp4", help="Input video path or directory of frames.")
     parser.add_argument("--txt_path", default="first_frame_bbox.txt", help="Path to ground truth text file.")
-    parser.add_argument("--model_path", default="./onnx_model", help="Path to the model checkpoint.")
+    parser.add_argument("--model_path", default="../onnx_model", help="Path to the model checkpoint.")
     parser.add_argument("--video_output_path", default="demo.mp4", help="Path to save the output video.")
     parser.add_argument("--save_to_video", default=True, help="Save results to a video.")
-    parser.add_argument("--use_fp16", default=False, help="Use FP16 precision for inference.")
+    parser.add_argument("--use_fp16", default=True, help="Use FP16 precision for inference.")
     args = parser.parse_args()
 
     main(args)
