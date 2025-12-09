@@ -65,8 +65,8 @@ int main(int argc, char** argv) {
         std::cout << "\033[32mframeIdx: " << frameIdx << "\033[0m" << std::endl;
         if(frameIdx == 0){
             // cv select roi
-            cv::Rect firstBbox = cv::selectROI(videoName, frame);
-            // cv::Rect firstBbox(384, 304, 342, 316);
+            // cv::Rect firstBbox = cv::selectROI(videoName, frame);
+            cv::Rect firstBbox(384, 304, 342, 316);
             std::cout << "first_bbox (x, y, w, h): " << firstBbox.x << ", " << firstBbox.y << ", " << firstBbox.width << ", " << firstBbox.height << std::endl;
             predMask = tracker.addFirstFrameBbox(frameIdx, frame, firstBbox);
         } else {

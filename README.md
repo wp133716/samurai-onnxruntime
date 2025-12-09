@@ -29,7 +29,7 @@ The C++ onnxruntime code requires `onnxruntime==1.20.0`(https://github.com/micro
 #### Build
 
 ```
-cd c++ && mkdir build
+cd cpp && mkdir build
 cd build
 cmake ..
 make -j8
